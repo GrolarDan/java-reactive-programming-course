@@ -1,16 +1,16 @@
 package org.masci.rp.sec02;
 
-import org.masci.rp.courseutil.Util;
+import org.masci.rp.courseutil.DmkUtil;
 import reactor.core.publisher.Flux;
 
 public class Lec02FluxIntro {
   public static void main(String[] args) {
 
-    var flux = Flux.just(1, 2, 3, 4, "a", Util.faker().name().fullName());
+    var flux = Flux.just(1, 2, 3, 4, "a", DmkUtil.faker().name().fullName());
 
     flux.subscribe(
-        Util.onNext(),
-        Util.onError(),
-        Util.onComplete());
+        DmkUtil.onNext(),
+        DmkUtil.onError(),
+        DmkUtil.onComplete());
   }
 }

@@ -1,7 +1,7 @@
 package org.masci.rp.sec02;
 
 import java.time.Instant;
-import org.masci.rp.courseutil.Util;
+import org.masci.rp.courseutil.DmkUtil;
 import org.masci.rp.sec02.helper.NameGenerator;
 
 public class Lec03FluxVsList {
@@ -13,7 +13,7 @@ public class Lec03FluxVsList {
 
     System.out.println("Get flux of names: " + Instant.now());
     NameGenerator.getFluxOfNames(5)
-        .subscribe(Util.onNext());
+        .subscribe(DmkUtil.onNext());
     System.out.println("End of reading: " + Instant.now());
   }
 }

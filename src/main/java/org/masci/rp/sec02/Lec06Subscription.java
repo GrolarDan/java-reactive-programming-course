@@ -1,7 +1,7 @@
 package org.masci.rp.sec02;
 
 import java.util.concurrent.atomic.AtomicReference;
-import org.masci.rp.courseutil.Util;
+import org.masci.rp.courseutil.DmkUtil;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.Flux;
@@ -34,16 +34,16 @@ public class Lec06Subscription {
           }
         });
 
-    Util.sleepSeconds(3);
+    DmkUtil.sleepSeconds(3);
     atomicReference.get().request(3);
-    Util.sleepSeconds(5);
+    DmkUtil.sleepSeconds(5);
     atomicReference.get().request(3);
-    Util.sleepSeconds(5);
+    DmkUtil.sleepSeconds(5);
     System.out.println("going to cancel");
     atomicReference.get().cancel();
-    Util.sleepSeconds(3);
+    DmkUtil.sleepSeconds(3);
     atomicReference.get().request(4);
 
-    Util.sleepSeconds(3);
+    DmkUtil.sleepSeconds(3);
   }
 }

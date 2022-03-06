@@ -3,7 +3,7 @@ package org.masci.rp.courseutil;
 import com.github.javafaker.Faker;
 import java.util.function.Consumer;
 
-public class Util {
+public class DmkUtil {
 
   private static final Faker FAKER = Faker.instance();
 
@@ -20,11 +20,12 @@ public class Util {
   }
 
   public static Faker faker() {
-     return FAKER;
+    return FAKER;
   }
-  
+
   public static void sleepSeconds(int seconds) {
     try {
+      System.out.println("... sleeping ...");
       Thread.sleep(seconds * 1000);
     } catch (InterruptedException ex) {
       System.out.println(ex);

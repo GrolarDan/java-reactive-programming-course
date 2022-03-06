@@ -2,7 +2,7 @@ package org.masci.rp.sec02.helper;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.masci.rp.courseutil.Util;
+import org.masci.rp.courseutil.DmkUtil;
 import reactor.core.publisher.Flux;
 
 public class NameGenerator {
@@ -21,7 +21,7 @@ public class NameGenerator {
   }
 
   private static String getName() {
-    Util.sleepSeconds(1);
-    return Util.faker().name().fullName();
+    DmkUtil.sleepSeconds(1);
+    return DmkUtil.faker().name().fullName();
   }
 }

@@ -1,6 +1,6 @@
 package org.masci.rp.sec02;
 
-import com.rp.courseutil.Util;
+import org.masci.rp.courseutil.DmkUtil;
 import java.util.List;
 import reactor.core.publisher.Flux;
 
@@ -17,15 +17,15 @@ public class Lec04FluxFromStream {
 
     integerFlux
         .subscribe(
-            Util.onNext(),
-            Util.onError(),
-            Util.onComplete()
+            DmkUtil.onNext(),
+            DmkUtil.onError(),
+            DmkUtil.onComplete()
         );
     integerFlux
         .subscribe(
-            Util.onNext(),
-            Util.onError(),
-            Util.onComplete()
+            DmkUtil.onNext(),
+            DmkUtil.onError(),
+            DmkUtil.onComplete()
         );
   }
 }
