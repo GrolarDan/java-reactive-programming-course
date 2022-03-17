@@ -2,6 +2,8 @@ package org.masci.rp.courseutil;
 
 import com.github.javafaker.Faker;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.reactivestreams.Subscriber;
 
 public class DmkUtil {
 
@@ -31,4 +33,20 @@ public class DmkUtil {
       System.out.println(ex);
     }
   }
+
+  public static <T> Subscriber<T> subscriber() {
+    return new DmkDefaultSubscriber<>();
+  }
+
+  public static <T> Subscriber<T> subscriber(String name) {
+    return new DmkDefaultSubscriber<>(name);
+  }
+
+//  public static <T> Subscriber<T> subscriberSlf4j() {
+//    return new DmkDefaultSubscriber<>(log::info);
+//  }
+//
+//  public static <T> Subscriber<T> subscriberSlf4j(String name) {
+//    return new DmkDefaultSubscriber<>(name, log::info);
+//  }
 }
