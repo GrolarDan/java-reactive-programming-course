@@ -14,7 +14,7 @@ public class DmkDefaultSubscriber<T> implements Subscriber<T> {
   }
 
   public DmkDefaultSubscriber(String name) {
-    this.name = name;
+    this.name = name + " - ";
     log = System.out::println;
   }
 

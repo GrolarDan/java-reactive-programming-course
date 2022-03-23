@@ -2,6 +2,7 @@ package org.masci.rp.monster;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import org.masci.rp.courseutil.DmkUtil;
@@ -25,13 +26,15 @@ public class PushNotification {
           continuationTokenHolder.set(response.getContinuationToken());
         })
         .map(NativeAppInstanceResponse::getContent)
-        .flatMapIterable(Function.identity());
+        .flatMapIterable(Function.identity())
+        .repeat(() -> Objects.nonNull(continuationTokenHolder.get()));
   }
 
   private static Mono<NativeAppInstanceResponse> getNativeAppInstanceResponse(String continuationToken) {
     System.out.println("Continuation token : " + continuationToken);
 
-    return Mono.just(new NativeAppInstanceResponse(generateNativeAppInstanceList(5), nextContinuationToken()));
+    return Mono.fromSupplier(() -> new NativeAppInstanceResponse(generateNativeAppInstanceList(DmkUtil.faker().random().nextInt(5, 10)), nextContinuationToken()))
+        .doOnSubscribe(s -> System.out.println("-- Subscribe"));
   }
 
   private static List<NativeAppInstance> generateNativeAppInstanceList(int count) {
@@ -48,6 +51,10 @@ public class PushNotification {
     var next = DmkUtil.faker()
         .random()
         .nextInt(1, 100);
-    return next < 90 ? DmkUtil.faker().book().title() : null;
+    System.out.println("-- Random number: " + next);
+    if (next >= 80) {
+      System.out.println("-- This was last page");
+    }
+    return next < 80 ? DmkUtil.faker().book().title() : null;
   }
 }
