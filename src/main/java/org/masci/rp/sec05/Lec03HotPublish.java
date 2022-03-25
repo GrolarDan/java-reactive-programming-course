@@ -5,17 +5,17 @@ import java.util.stream.Stream;
 import org.masci.rp.courseutil.DmkUtil;
 import reactor.core.publisher.Flux;
 
-public class Lec02HotShare {
+public class Lec03HotPublish {
 
   public static void main(String[] args) {
     Flux<String> movieStream = Flux.fromStream(() -> getMovie())
-        .delayElements(Duration.ofSeconds(2))
-        .share();
+        .delayElements(Duration.ofSeconds(1))
+        .publish().refCount(1);
 
     movieStream
         .subscribe(DmkUtil.subscriber("sam"));
 
-    DmkUtil.sleepSeconds(5);
+    DmkUtil.sleepSeconds(10);
 
     movieStream
         .subscribe(DmkUtil.subscriber("mike"));
@@ -37,4 +37,5 @@ public class Lec02HotShare {
         "Scene 8"
     );
   }
+
 }

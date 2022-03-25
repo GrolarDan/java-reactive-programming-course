@@ -8,7 +8,7 @@ import reactor.core.publisher.Flux;
 public class Lec01ColdPublisher {
 
   public static void main(String[] args) {
-    Flux<String> movieStream = Flux.fromStream(Lec01ColdPublisher::getMovie)
+    Flux<String> movieStream = Flux.fromStream(() -> getMovie())
         .delayElements(Duration.ofSeconds(2));
 
     movieStream
