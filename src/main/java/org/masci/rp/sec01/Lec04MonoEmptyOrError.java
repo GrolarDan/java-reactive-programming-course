@@ -5,7 +5,7 @@ import reactor.core.publisher.Mono;
 
 public class Lec04MonoEmptyOrError {
   public static void main(String[] args) {
-    userRepository(20).subscribe(DmkUtil.onNext(),
+    userRepository(2).subscribe(DmkUtil.onNext(),
         DmkUtil.onError(),
         DmkUtil.onComplete()
     );
