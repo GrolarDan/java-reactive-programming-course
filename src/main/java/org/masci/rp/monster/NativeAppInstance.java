@@ -8,5 +8,6 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class NativeAppInstance {
+  String name;
   String profileId;
 }
