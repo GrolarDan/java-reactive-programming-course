@@ -4,14 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-@AllArgsConstructor
 public class SlackMessage {
 
-  private String from;
+  private static final String FORMAT = "[%s -> %s] : %s";
+
+  private String sender;
+  private String receiver;
   private String message;
 
   @Override
   public String toString() {
-    return from + " : " + message;
+    return String.format(FORMAT, sender, receiver, message);
   }
 }

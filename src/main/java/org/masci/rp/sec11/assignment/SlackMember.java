@@ -1,26 +1,30 @@
 package org.masci.rp.sec11.assignment;
 
-import org.masci.rp.courseutil.DmkUtil;
+import java.util.function.Consumer;
 
 public class SlackMember {
 
-  private SlackRoom slackRoom;
+  private Consumer<String> messageConsumer;
   private String name;
 
   public SlackMember(String name) {
     this.name = name;
   }
 
-  public void joinRoom(SlackRoom room) {
-    slackRoom = room;
-    slackRoom.joinRoom(DmkUtil.subscriber(name));
+  String getName() {
+    return name;
   }
 
-  public void sendMessage(String msg) {
-    if (slackRoom == null) {
-      System.out.println("You're not in any room");
-    } else {
-      slackRoom.sendMessage(new SlackMessage(name, msg));
-    }
+  void setMessageConsumer(Consumer<String> messageConsumer) {
+    this.messageConsumer = messageConsumer;
   }
+
+  void receive(String message) {
+    System.out.println(message);
+  }
+
+  public void sendMessage(String message) {
+    messageConsumer.accept(message);
+  }
+
 }
