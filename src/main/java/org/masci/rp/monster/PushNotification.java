@@ -5,8 +5,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.masci.rp.courseutil.DmkUtil;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -14,78 +17,112 @@ import reactor.core.scheduler.Schedulers;
 
 public class PushNotification {
 
-  public static void main(String[] args) {
-    getAllNativeAppInstances()
-//        .parallel(8)
-        .publishOn(Schedulers.boundedElastic())
-        .bufferTimeout(5, Duration.ofSeconds(2))
-//        .doOnNext(list -> log(list.toString()))
-        .flatMap(PushNotification::process)
-        .subscribe();
+  private static final Duration DATABASE_SCAN_DELAY = Duration.ofMillis(25);
+  private static final Duration PROFILE_SERVICE_DELAY = Duration.ofMillis(20);
+  private static final Duration AWS_SQS_SEND_DELAY = Duration.ofMillis(200);
 
-    DmkUtil.sleepSeconds(60);
+  private static final int MIN_GENERATED_RECORDS = 5;
+  private static final int MAX_GENERATED_RECORDS = 10;
+  private static final int MAX_RECORDS = 30;  // when set to 0, continuation token will be random based
+
+  private static final AtomicInteger count = new AtomicInteger(0);
+
+  public static void main(String[] args) {
+    //    AtomicInteger count = new AtomicInteger(0);
+    StopWatch stopWatch = new StopWatch();
+    stopWatch.start();
+
+    getAllNativeAppInstances().publishOn(Schedulers.boundedElastic())
+        .bufferTimeout(10, Duration.ofSeconds(2))
+        .doOnNext(PushNotification::process)
+        //        .flatMap(PushNotification::process)
+        //        .subscribe();
+        .blockLast();
+
+    stopWatch.stop();
+
+    log(String.format("TOTAL %d notifications sent in %s", count.get(), stopWatch.formatTime()));
+
+    //    DmkUtil.sleepSeconds(60);
   }
 
-  private static Flux<NativeAppInstance> getAllNativeAppInstances() {
+  private static Flux<String> getAllNativeAppInstances() {
     AtomicReference<String> continuationTokenHolder = new AtomicReference<>(null);
 
     var nativeAppInstanceResponse = getNativeAppInstanceResponse(continuationTokenHolder.get());
-    return nativeAppInstanceResponse.doOnNext(response -> {
-//          System.out.println("new continuation token: " + response.getContinuationToken());
-          continuationTokenHolder.set(response.getContinuationToken());
-        })
-        .repeat(() -> Objects.nonNull(continuationTokenHolder.get()))
+    return nativeAppInstanceResponse.doOnNext(response -> continuationTokenHolder.set(response.getContinuationToken()))
         .map(NativeAppInstanceResponse::getContent)
-        .flatMapIterable(Function.identity());
+        .flatMapIterable(Function.identity())
+        .map(NativeAppInstance::getProfileId)
+        .repeat(() -> StringUtils.isNotEmpty(continuationTokenHolder.get()))
+        .log()
+        .flatMap(PushNotification::filterByOptin, 32);
   }
 
   private static Mono<NativeAppInstanceResponse> getNativeAppInstanceResponse(String continuationToken) {
     log("Continuation token : " + continuationToken);
 
     return Mono.fromSupplier(() -> {
-          String name = DmkUtil.faker().name().firstName();
+          String name = DmkUtil.faker()
+              .name()
+              .firstName();
           log("Calling database for: " + name);
-          return new NativeAppInstanceResponse(generateNativeAppInstanceList(name, DmkUtil.faker().random().nextInt(5, 10)), nextContinuationToken());
+          return new NativeAppInstanceResponse(
+              generateNativeAppInstanceList(name, DmkUtil.faker().random().nextInt(MIN_GENERATED_RECORDS, MAX_GENERATED_RECORDS)),
+              nextContinuationToken()
+          );
         })
-        .delayElement(Duration.ofSeconds(3));
+        .delayElement(DATABASE_SCAN_DELAY);
   }
 
   private static List<NativeAppInstance> generateNativeAppInstanceList(String name, int count) {
     List<NativeAppInstance> result = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      result.add(new NativeAppInstance(name, DmkUtil.faker().internet().uuid()));
+      result.add(new NativeAppInstance(name, DmkUtil.faker()
+          .internet()
+          .uuid()));
     }
     return result;
   }
 
   private static String nextContinuationToken() {
-    var next = DmkUtil.faker()
-        .random()
-        .nextInt(1, 100);
-//    System.out.println("-- Random number: " + next);
-    if (next >= 80) {
+    boolean hasNextToken;
+
+    if (MAX_RECORDS > 0) {
+      hasNextToken = count.get() < MAX_RECORDS - MAX_GENERATED_RECORDS;
+    } else {
+      var next = DmkUtil.faker()
+          .random()
+          .nextInt(1, 100);
+      hasNextToken = next < 80;
+    }
+
+    if (!hasNextToken) {
       log("This was last page");
     }
-    return next < 80 ? DmkUtil.faker().book().title() : null;
+
+    log("Record counts: " + count.get());
+
+    return hasNextToken ? DmkUtil.faker()
+        .book()
+        .title() : null;
+  }
+
+  private static Mono<String> filterByOptin(String profileId) {
+    return Mono.just(profileId)
+//        .doOnNext(id -> log("Processing profile id: " + id))
+        .delayElement(PROFILE_SERVICE_DELAY);
+  }
+
+  private static Mono<List<String>> process(List<String> list) {
+//    log("Processing buffer: " + list.toString());
+    count.getAndAdd(list.size());
+    return Mono.just(list)
+        .delayElement(AWS_SQS_SEND_DELAY);
   }
 
   private static void log(String msg) {
-    System.out.println(Thread.currentThread().getName() + " \t\t - " + LocalDateTime.now() + " : " + msg);
-  }
-
-  private static Mono<NativeAppInstance> process(NativeAppInstance nativeAppInstance) {
-    log(nativeAppInstance.toString());
-    DmkUtil.sleepSeconds(2);
-    return Mono.just(nativeAppInstance);
-  }
-
-  private static Mono<List<NativeAppInstance>> process(List<NativeAppInstance> nativeAppInstance) {
-    log("Processing buffer");
-    for (NativeAppInstance instance : nativeAppInstance) {
-      log(instance.toString());
-    }
-    log("Simulating process finish");
-    DmkUtil.sleepSeconds(2);
-    return Mono.just(nativeAppInstance);
+    System.out.println(Thread.currentThread()
+        .getName() + " \t\t - " + LocalDateTime.now() + " : " + msg);
   }
 }
